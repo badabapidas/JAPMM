@@ -1,0 +1,136 @@
+Java virtual machine flags:
+
+@@@@@@@@@@@@@@@@
+-XX:+PrintCompilation // to find out what kind  of compilation is happening when the JVM is running our code 
+
+The output can be as given below
+	 81    1       3       java.lang.Object::<init> (1 bytes)
+     82    2       3       java.lang.String::hashCode (55 bytes)
+     82    3       3       java.lang.String::charAt (29 bytes)
+     84    4       3       java.lang.String::length (6 bytes)
+     86    5       3       java.lang.String::equals (81 bytes)
+     88    7       3       java.lang.Math::min (11 bytes)
+     89    6       3       java.lang.AbstractStringBuilder::ensureCapacityInternal (27 bytes)
+     89   12     n 0       java.lang.System::arraycopy (native)   (static)
+     89    8       3       java.lang.CharacterData::of (120 bytes)
+     89   14       4       java.lang.String::charAt (29 bytes)
+     89    9       3       java.lang.CharacterDataLatin1::getProperties (11 bytes)
+     90   10       3       java.lang.Character::toLowerCase (9 bytes)
+     90   11       3       java.lang.CharacterDataLatin1::toLowerCase (39 bytes)
+     90   18       3       java.lang.String::indexOf (70 bytes)
+     90    3       3       java.lang.String::charAt (29 bytes)   made not entrant
+     90   13       3       java.lang.AbstractStringBuilder::append (29 bytes)
+     91   16       3       java.io.WinNTFileSystem::isSlash (18 bytes)
+     91   15       3       java.lang.StringBuilder::append (8 bytes)
+     92   17  s    3       java.lang.StringBuffer::append (13 bytes)
+     92   19       3       java.util.Arrays::copyOfRange (63 bytes)
+     97   20       3       java.lang.System::getSecurityManager (4 bytes)
+     99   21       3       java.lang.String::getChars (62 bytes)
+     99   22       1       java.lang.Integer::intValue (5 bytes)
+     99   23       1       java.lang.Boolean::booleanValue (5 bytes)
+    100   24       3       com.bada.example1.PrimeNumbers::isPrime (35 bytes)
+    100   26       3       java.lang.Number::<init> (5 bytes)
+    100   27       3       java.lang.Integer::<init> (10 bytes)
+    100   25       3       java.lang.Integer::valueOf (32 bytes)
+    100   29 %     4       com.bada.example1.PrimeNumbers::isPrime @ 5 (35 bytes)
+    101   28       1       java.util.ArrayList::size (5 bytes)
+    101   30       3       java.util.ArrayList::add (29 bytes)
+    101   31       3       java.util.ArrayList::ensureCapacityInternal (13 bytes)
+    103   32       3       com.bada.example1.PrimeNumbers::getNextPrimeAbove (36 bytes)
+    104   32       3       com.bada.example1.PrimeNumbers::getNextPrimeAbove (36 bytes)   made not entrant
+    105   33       3       com.bada.example1.PrimeNumbers::getNextPrimeAbove (36 bytes)
+    105   34       4       com.bada.example1.PrimeNumbers::isPrime (35 bytes)
+    106   24       3       com.bada.example1.PrimeNumbers::isPrime (35 bytes)   made not entrant
+    162   35       4       com.bada.example1.PrimeNumbers::getNextPrimeAbove (36 bytes)
+    167   33       3       com.bada.example1.PrimeNumbers::getNextPrimeAbove (36 bytes)   made not entrant
+    421   37       3       java.lang.AbstractStringBuilder::append (50 bytes)
+    422   45       3       java.lang.Integer::getChars (131 bytes)
+    422   49       1       java.lang.Object::<init> (1 bytes)
+    422    1       3       java.lang.Object::<init> (1 bytes)   made not entrant
+    422   42       3       java.lang.Integer::stringSize (21 bytes)
+    422   36       1       java.util.ArrayList::access$000 (5 bytes)
+    423   46       3       java.util.ArrayList$Itr::checkForComodification (23 bytes)
+    423   47       3       java.lang.Integer::toString (8 bytes)
+    423   48       3       java.lang.Integer::toString (48 bytes)
+    423   50       4       java.lang.StringBuilder::append (8 bytes)
+    423   38       3       java.lang.StringBuilder::append (8 bytes)
+    424   39       3       java.lang.String::<init> (10 bytes)
+    424   40       3       java.lang.String::valueOf (14 bytes)
+    424   51       4       java.lang.Integer::getChars (131 bytes)
+    424   41       3       java.lang.StringBuilder::append (9 bytes)
+    424   43       3       java.util.ArrayList$Itr::hasNext (20 bytes)
+    425   44       3       java.util.ArrayList$Itr::next (66 bytes)
+    425   52       3       sun.nio.cs.SingleByte$Encoder::encode (32 bytes)
+    425   15       3       java.lang.StringBuilder::append (8 bytes)   made not entrant
+	
+Column 1: No of milliseconds since the virtual machine started
+Column 2: Order in which the method or code block is compiled
+Column 3.1: s to define the synchrounous method
+Column 3.2: n to define the native method
+Column 3.3: ! to define exception handling
+Column 3.4: % mean the code is being natively compiled and now running on code cache; showing % means the method is now running on most optimal way possible 
+Column 4: this tel us what kind of compiling has taken place(0-4)
+Column 4.1: 0 means no compilation, the code is just beind interpreted
+Column 4.2: 1-4 means deep level of compilation; 4 means the code is copiled in best level and the code is cacehd;
+Column 5: Line of code the code actually being compiled
+
+
+JVM JIT Compilers
+
+C1: Native level 1, 2, 3
+C2: Native level 4
+
+Virtual machine decides which level of compilation will apply in a particular block of code based on how the native is run and how complex the time consuming it is
+So if a block of code is using many no of times, JVM will use the compiler C2 so that the best possible way the code can be compiled and even the code will be cached so that it increases performance
+The higher the no of compilation the more optimized the code should be.
+
+
+@@@@@@@@@@@@@@@@
+-XX:+UnlockDiagnosticVMOptions -XX:+LogCompilation //To store the logs in a file
+ 
+While C2 compiler is use its use code cache to store the code block so that it can be used faster in future refs. But code cache even has some size limit. So if that size limit reached then JVM will take care of removing and again adding code blocks in the code cache based on the active usage.
+
+But if all the stored codes are being actively using then JVM will show warning message as "CodeCache is full. Compiler hass been disabled".  This does not interrupt your running but it means the code is not running in an optimized way.
+
+@@@@@@@@@@@@@@@@
+-XX:+PrintCodeCache //to get the default size of the cache code, how much used and how much cache is free
+
+Output: 
+CodeCache: size=245760Kb used=1149Kb max_used=1160Kb free=244610Kb
+ bounds [0x0000000002b00000, 0x0000000002d70000, 0x0000000011b00000]
+ total_blobs=283 nmethods=52 adapters=145
+ compilation: enabled
+ 
+@@@@@@@@@@@@@@@@
+-XX:ReservedCodeCacheSize=28m // to set a new cache size
+
+New Output:
+CodeCache: size=28672Kb used=1149Kb max_used=1160Kb free=27522Kb
+ bounds [0x0000000002d10000, 0x0000000002f80000, 0x0000000004910000]
+ total_blobs=283 nmethods=52 adapters=145
+ compilation: enabled 
+ 
+Using JCONSOLE you can see the code cache
+C:\Users\bada\AppData\Local\Temp\hsperfdata_bada // location where JVM store its proceses; you have to give first the full right access to everyone
+
+So if you use jconsole to see the code cache size of your running application then just remember jconsole is going to share some space from code cache as JVM has to do some extra work to make jconsole to connect with our application. It has some back ground process;
+
+you can use -XX:+PrintCompilation -XX:ReservedCodeCacheSize=28m -XX:+PrintCodeCache and runn you program givng some sleep and then connect you appication using jconsole, you can see what are the back ground process JVM do for this communication.
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
