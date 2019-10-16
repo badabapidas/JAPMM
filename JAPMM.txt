@@ -75,7 +75,7 @@ Column 4.2: 1-4 means deep level of compilation; 4 means the code is copiled in 
 Column 5: Line of code the code actually being compiled
 
 
-JVM JIT Compilers
+JVM JIT Compilers: A virtual machine has 2 built in compilers C1 and C2
 
 C1: Native level 1, 2, 3
 C2: Native level 4
@@ -118,13 +118,50 @@ So if you use jconsole to see the code cache size of your running application th
 you can use -XX:+PrintCompilation -XX:ReservedCodeCacheSize=28m -XX:+PrintCodeCache and runn you program givng some sleep and then connect you appication using jconsole, you can see what are the back ground process JVM do for this communication.
  
  
+JVM Compilers Flags
+-client
+-server
+-d64
+
+@@@@@@@@@@@@@@@@
+-XX:-TieredCompilation // allowed to you to turned off tiered compilation. TO tell the JVM to run in interpreted mode only
+
+@@@@@@@@@@@@@@@@
+-XX:+PrintFlagsFinal // show you all the vailable flags, where on of them CICompilerCount will show you the available threads to compiling our code
+
+Native Compilation Tuning
+1. increase/decrease CICompilerCount
+@@@@@@@@@@@@@@@@
+-XX:CICompilerCount=n
+
+we can use jdk inbuild tools to fine tuned this like given below
+- jps // to get the runnins processes process id
+- jinfo -flag CICompilerCount pid // to get the flag value using jinfo
+ 
+2. increase/decrease Compile threashold
+@@@@@@@@@@@@@@@@
+-XX:CompileThreshold=n 
  
  
- 
- 
- 
- 
- 
+HOW MEMORY WORKS - THE STACK AND THE HEAP 
+
+Threads uses stack to store its local execution status and local primitives. Individual thread use different stack. Heap is used to store sharind data objects. So primitve datas stores in stack but apart from primitives any object or custom define data will be stored in heap and the reference of that object will be stored in stack. One thread can not use the stack variables of other thread as this will be local scoped. But all the threads can acces heap stored data which healps is sharing datas among different executions in different threads.   
+
+Final keyword should be used for better performance.
+
+Escaping references:
+
+Escaping reference means there is some loop whole which can be breached. So suppose there are a no of records of customer, and there is a method exposed getCustomers() which will return you the records.
+Now depending on the implementation those records can e easily change. So there are couple of ways how we can restrict this
+1. Istead of sending the original copy we can create a copy of that and sending
+2. We can create a unmodifiable collection and sending - this will give you runtime exception if anyone try to change the details of that object
+3. We can create an interface and hide the setters, this will give you the compile time error rather than runtime
+4. In java 9 or above, there is a concept of expossing needed modules to outside. With this we can decide what are the classes we should expose to outside so that no body can do a trick with the impl
+
+
+
+
+
  
  
  
