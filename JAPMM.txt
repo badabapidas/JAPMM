@@ -158,16 +158,89 @@ Now depending on the implementation those records can e easily change. So there 
 3. We can create an interface and hide the setters, this will give you the compile time error rather than runtime
 4. In java 9 or above, there is a concept of expossing needed modules to outside. With this we can decide what are the classes we should expose to outside so that no body can do a trick with the impl
 
+The Metaspace:
+
+In JVM apart from heap and stack there is a concept of metaspace. All the metadata related to any executions like class names, method names etc is being stored here. All the static variable (primitive, objects) are stored in the metaspace. These static objects will remain foreover in the metaspace until your JVM s running. Its not like stack. And moreover this metaspace is accessible from any threads. Thats why declaring any variable static means that can be access from any class anywhere.
+
+There is not difference between private and public variable. both the variales stored in a same way in the heap. Metaspace is there in JAVA from version 8. before that there was a concept of PermGen.
+
+Its not always that the objects are defined in the heap only. Some object might be like this which is used by only one block of code. As a programmer we dont have the facility to chose where the objects will create so JVM is intelligent enough to take a decission in this case and create the object in the stack rather then in the heap. And once the object is no longer used it will be poped out from the stack.
+
+In case of String if two strings have same value then virtual machine make those as a one. Its not always true in case of any assigments in Strings. Java has one method call intern to avoid this problem. It will make sure same objects are reusable. but intern is a expensive operation to perform.
+
+JVM Memory Optimization by Tuning:
+1. -XX:+PrintStringTableStatistics //the size and density of the string pool
+2. -XX:StringTableSize // Tuning the size of the String Pool
+3. -XX:MaxHeapSize=600m [Shortcut Keys: -Xmx] // to set the size of heap memory 
+4. -XX:InitialHeapSize=1g [Shortcut Keys: -Xms] // to set the size of initial heap size 
+5. -XX:+UnlockDiagnosticVMOptions -XX:+PrintFlagsFinal // to see the default values of the heap
+
+@@@@@@@@@@@@@@@@
+-XX:+PrintStringTableStatistics //the size and density of the string pool
+
+Elapsed time was 36445 ms.
+StringTable statistics:
+Number of buckets       :     60013 =    480104 bytes, avg   8.000
+Number of entries       :  10000767 = 240018408 bytes, avg  24.000
+Number of literals      :  10000767 = 559972272 bytes, avg  55.993
+Total footprint         :           = 800470784 bytes
+Average bucket size     :   166.643
+Variance of bucket size :    55.342
+Std. dev. of bucket size:     7.439
+Maximum bucket size     :       196
+
+The more the string pool bucket list is full the less efficient your applicatioon would be. Because the comparison whether a string is there in the relevemt bucket list will be too high; 
+
+To enhance the performnece of your application you can increase te default string pool size by the below command
+@@@@@@@@@@@@@@@@
+-XX:StringTableSize=120121 (this is the next prime number after the default one which is 60013) 
+
+Elapsed time was 20445 ms.
+StringTable statistics:
+Number of buckets       :    120121 =    960968 bytes, avg   8.000
+Number of entries       :  10000767 = 240018408 bytes, avg  24.000
+Number of literals      :  10000767 = 559972272 bytes, avg  55.993
+Total footprint         :           = 800951648 bytes
+Average bucket size     :    83.256
+Variance of bucket size :   492.378
+Std. dev. of bucket size:    22.190
+Maximum bucket size     :       157
+
+You can notice now the Average bucket size reduced. And the time taken to perform the same operation. And if you notice the footprint, adding this flag have not added much overhead.
+
+~~~ Tuning the size of the heap
+-XX:+UnlockDiagnosticVMOptions -XX:+PrintFlagsFinal // to see the default values of the heap
+
+InitialHeapSize                          := 268435456 (approax 260 MB)     
+MaxHeapSize                              := 4267704320 (4GB)
+
+-XX:MaxHeapSize=600m [SC: -Xmx600m]// to set the size of heap memory
+Usualy the prefered way to test you aplication running efficiently use this flag to reduce the size.
+
+-XX:InitialHeapSize=1g [SC: -Xms1g]// you can set the initial heap size to increase performace
+// So once you got the base footprint of you application running, you can use these 2 flags to test your application performance. 
+ 
+~~~~ GARBAGE COLLECTION 
+
+Any object on the heap which cannot be reached through a reference from the stack is "eligible for garbage collection"
+System.gc() - calling this method will explicitly telling JVM to freed up unused memory at that point. But calling this method expliciltly in a program is not a good idea. As running GC might halt you running program for sometime as that is going to freed up spaces. And there is not right place to call this. So the best way to handle GC is to let JVM handle that.
+
+Finalize: From java 9 finalize() method is deprecated. As this can do some serious damage. So please look in to the java example we have created, where we created lotss of customers and in the customer class we override the finalize() method. We can see once we start explicitly the GC not all the customer is garbaged. More than that we can introduce some never ending loop to hang the GC process which will failed to freed up any un used memory and as a result you application can crash or performance will degrade.
 
 
 
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
