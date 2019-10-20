@@ -228,6 +228,102 @@ System.gc() - calling this method will explicitly telling JVM to freed up unused
 Finalize: From java 9 finalize() method is deprecated. As this can do some serious damage. So please look in to the java example we have created, where we created lotss of customers and in the customer class we override the finalize() method. We can see once we start explicitly the GC not all the customer is garbaged. More than that we can introduce some never ending loop to hang the GC process which will failed to freed up any un used memory and as a result you application can crash or performance will degrade.
 
 
+~~~ Monitoring the HEAP
+
+we can use one tool bundled in java called VisualVM to monitor the heap and metaspace is used for any running application. The exercise we have tried have seen how the program crashed in sometime and the same can be visualized in VisualVM heap. Later we fixed the problem in our code and ensured the heap size never crashed and we made our application more optimized.
+
+~~~ Analyzing heap dump
+@@@@@@@@@@@@@@@@
+-XX:+HeapDumpOnOutOfMemoryError // it will dump the contents of a heap in case of any out of memory occurs
+-XX:HeapDumpPath=someFilePath // store the dump file
+
+Eclipse has one plugin Memory Analyzer(MAT) which actually helps to visulize the heap dump logs and let you easily figured it out what is the actual issue is.
+
+~~~ Generational Garbage Collection
+
+The Mark and Sweap process: This is a general algortihm that GC used. Instead of what are the objects is not in used GC look for all of the objects which need to be retain and then rescues them. So this is a two steps process. First step is the marking and second step is the sweaping. During MArking process all the threads of an running application are paused and marking will not work eficiently while there are running threads. The GC then checks all the live object refs. All the unmarked object are removed. Once the marking process done all the marked objects are then moved to a single contiguous block of memory. This stops to heap to become fragmented over time and make the easier and quicker for the virtual machine to find memory to allocate for future objects. 
+
+So the GC actually does not collect and garbage it actually collects objects which are not eligible for garbage collection and it saves them. SO it means when there are many garbage the GC process will be pretty much instantaneous.
+
+The problem with the above algorithm is suppose if we have many used references then the main app will hault for few seconds at a time as the GC will run to find out the live references. To avoid this we have something called Generational Garbage Collection. For this process Heap is actually organized into a separate sections.
+
+Heap is divided into 2 sections (young gen and old gen). The young gen is much smalller compare to old gen. 
+Then concept behind young and old generation is, all the new object creations take place in the young generations. And as this is the section where all the new objects will be stored so most of the object might are garbage and can quickly removed. So in this process the appliacation hault issue wont come. As young gen is smaller then running GC will be very quick compare to whole heap.
+So once the objects survived one GC process those will be moved to old generation. And GC will take place in the old gen once the old gen memory is full or about to full.
+
+The garbage collection of young gen is called Minor collection and the garbage collection of old generation called major collection. Major collection is usually slow process ad there can be huge objects to be fragment along with the check whether the object is still alive. So this process can hault the process but compare to earlier approach its very minimul.
+
+The young gen is further divided into 3 sections.
+EDEN
+S0 - Survivor Space 0
+S1 - Survivor Space 1
+
+So when any new obejct created its placed in the eden space. When the eden space gets full then GC process would take place on the eden space and any surviving object gets moved to S0. Our application will then continue running and new objects gets created in the eden space. In the next GC process now it will scan eden space and S0 section and if any surviving object that gets moved to S1 and S0 and Eden gets empty. So in the next process the objects gets moved from eden and S1 to S0.  So S0 and S1 spaces is used in alternative way. At any point of time either of the Survivor space will be empty always. Thats why in the heap monitoring section we have seen there always some space in the heap which is not used though the heap memory gets full. This is beause of this survivor space.
+
+So any object moving from S0 to S1 or S1 to S0 called one genaretion old. So suppose if any obejct moved from either of the survivor 5 times that means that object is 5 generation old. This is a threashold we can set that before moving to old gen, how many times those object has to be survive. 
+
+Plugin can be installed in VisualVM name Visual GC to see these heap generation details.
+
+
+~~~ Garbage Collector tuning & selection
+
+@@@@@@@@@@@@@@@@
+-verbose:gc //flag to see how often gc process take place while your app is running
+
+while running with this flag in the output you can see 
+GC (Allocation Failure)
+Full GC 
+
+So here GC means minor garbage collection and Full GC means Major.
+
+When any application running JVM dynamically change the size of the Eden and both the survivors according to the neccessity. This can be switched off using the below command
+@@@@@@@@@@@@@@@@
+-XX:-UseAdaptiveSizePolicy 
+
+By default this will be enabled.
+
+@@@@@@@@@@@@@@@@
+-XX:NewRatio=n // how many time bigger the old gen should be compare to young gen; default value is 2(this will vary machine to machine). That means old gen is 2 times bigger then young gen.
+
+@@@@@@@@@@@@@@@@
+-XX:SurvivorRatio=n //this falg means how much of the young gen should be taken up by the survivor spaces S0 and S1, the rest of this would be eden space.; default value is 8(this will vary machine to machine); This means S0 and S1 each will be 1/8 of the young generation, so eden space will be 6/8.
+
+@@@@@@@@@@@@@@@@
+-XX:MaxTenuringThreshold=n // this flag means how many generations should a object survive beofre become part of the old gen. Default value is 15(this will vary machine to machine). So 15 is the maximum value set. So JVM can take a decission to move the objects to old gen based on the optimizations. Dont set this value to more then 15, setting value 16 means obejcts will be forever resides in young gen and never go to old gen. So some java will allow youto set the value to 16 but the recommendation is dont.
+
+
+~~~ Choosing Garbage Collectors
+
+Types of collector:
+- Serial: Serial means all the gc process will take part in a single thread. So when GC runs all your application threads will pause irrespective of how many threads your app runs.
+@@@@@@@@@@@@@@@@
+-XX:+UseSerialGC
+
+- Parallel: GC process take place in a parallel threads. The performace is better then the serial. In java 8 this is the defalut GC collector set.
+@@@@@@@@@@@@@@@@
+-XX:+UseParallelGC
+
+- Mostly Concurrent: GC process take place concurrently. That means its real time and while the process took place the application will not halt.
+@@@@@@@@@@@@@@@@
+-XX:+UseConcMarkSweepGC // java 9 this is default collector
+-XX:+UseG1GC // java 10 this is default collector
+
+
+~~~ Using a profiler to analyse application performance
+
+JMC: Java Mission Control is an opensource tool which can help you to monitor all the important details of your running application including all the threads, heap memories, CPU usages and so on. JMC allowed you to record any statistics of your interests which propbaly will help you if your system got crash or anything. This will maintain the history of your given statistics which you can later analysis.
+
+To enable flight record mode you have to pass below jvm arguments
+
+@@@@@@@@@@@@@@@@
+-XX:+UnlockCommercialFeatures
+-XX:+FlightRecorder
+
+Using JMC you can start recording but if you want to start reording from you application you have tp pass the below args
+@@@@@@@@@@@@@@@@
+-XX:StartFlightRecording=delay=2min, duration=60s,name=Test,filename=recording.jfr,settings=profile.
+
+JMC allows you to drill down the problems in your aplication and give suggessions is possible to improve your code.
 
 
 
@@ -239,8 +335,6 @@ Finalize: From java 9 finalize() method is deprecated. As this can do some serio
 
 
 
-
-
-
+ 
 
 
