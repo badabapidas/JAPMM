@@ -9,7 +9,7 @@ public class CustomerManager {
 
 	private List<Customer> customers = new ArrayList<Customer>();
 	private int nextAvalailbleId = 0;
-//	private int lastProcessedId = -1;
+	private int lastProcessedId = -1;
 
 	public void addCustomer(Customer customer) {
 		synchronized (this) {
@@ -25,15 +25,15 @@ public class CustomerManager {
 	public Optional<Customer> getNextCustomer() {
 
 		// old code which causes the heap size increses to lead OutOfMemory error
-//		if (lastProcessedId + 1 > nextAvalailbleId) {
-//			lastProcessedId++;
-//			return Optional.of(customers.get(lastProcessedId));
-//		}
-		// solution for the above issue
-		synchronized (customers) {
-			if (customers.size() > 0)
-				return Optional.of(customers.remove(0));
+		if (lastProcessedId + 1 > nextAvalailbleId) {
+			lastProcessedId++;
+			return Optional.of(customers.get(lastProcessedId));
 		}
+		// solution for the above issue
+//		synchronized (customers) {
+//			if (customers.size() > 0)
+//				return Optional.of(customers.remove(0));
+//		}
 		return Optional.empty();
 	}
 

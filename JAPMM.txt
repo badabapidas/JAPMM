@@ -326,12 +326,44 @@ Using JMC you can start recording but if you want to start reording from you app
 JMC allows you to drill down the problems in your aplication and give suggessions is possible to improve your code.
 
 
+~~~ Micro Benchmarking
+Micro Benchmarking of a code block means you are testing a piece of code performance. But it always not necessary, if the code block performed well in isolation will give the same result while deploying the code in the production. So that piece of code might give you worse result while running with your project. We have seen the same example for isPrime method. In isolation this method performance got improved drastically from ~820ms to ~5ms. But while used the same code block in the fibbonacci project the performance got reduced. The time to find out 8 prime fibbonacci is t
 
 
+~~~ JMH (Java MicroBenchmark Harness)
+JMH helps you to find the performance benchmarking of your different versions of codes. Suppose you have isPrime method which was not high performance so we created version 2 with some changes. Now with JMH with can annotate which are the methods that need to be perform benchmarking. Once you run jmh you can get the output about both the versions. The only one disadvantage of JMH is it took aroung 25 min to run the process.
 
 
+~~~ How Lists Work
+Types of list
+
+- ArrayList
+- CopyOnWriteArrayList
+- LinkedList
+- AttributeList
+- RoleList
+- RoleUnresolvedList
+- Stack
+- Vector
+
+ArrayList:
+
+Arraylist by default initialized the size to 10; So on adding more values the Arraylist will create new arrraylist with new capacity (current + half of the current size, so in this case 10+5=15), and copy the values from old arraylist to new and discard the old one. SO this is a costly opertaion. So if you app expects a huge no to add in the array list so performing in this way you app might be in a efficient. So one possible way to resolve this is you can initialize the intial size of the array. Ofcourse if you list grow the arraylist will grow dynamically. but initially keeping a no will avoid the initial overheads. But one thing to keep in mind, initial memory will be allocated with the initial size that you defined. So if your app dont use that much size then those will be waste of spaces. So be careful when you take this decission.
+
+In Linked list adding, removing operations are faster compare to Arraylist. but in some scenarios, retrieving values and so on Arraylist is much more faster then Linked List. In Sorting both the list will give pretty much same performance. As underlying implementation is using Arrays.Sort() in both the lists. But as in the LL it has to convert the list to array first so that might add some overhead but other then that it wont make any diferences.
 
 
+HashMap:
+
+By default hashmap initial size is 16. When we put different keys along with diff values, a module func of 16 gives the index where the key has to be entered. In one index many keys can store and those keys will be linked with a linked list. Hashmap can grow like Arraylist but it grows double in size. So the new size will be 32. And once the new hashmap creates all the store keys has to be reindexed with the modulo fun of 32 now. This is a overhead doing this. So like ArrayList we can define the initial size of hashmap which might reduce this overhead. Along with initial size we can pass the full percentage as a second arg. This parameter will tel when to grow the size of the hashmap (0.6f -> means when the hashmap field 60% grow the size)
+
+LinkedHashMap
+
+This is nothing but hashmap in a order way. So in hashmap when you iterate the order is not fixred so using linked hasmap you can achieve this.
+
+Hashtable is a thread safe version of a hashmap.If you are not working in a multithreaded env then always work with hashmap it will absolutely give you a better performance then the hashtable. But if you are workng in a multithreade env then it would be worth testing using a hashmap with a synchronzation block vs a hashtable.
+
+Treemap is similarly like hashmap and linked hashmap but in tree map the order gets reserved automatically. So suppose if you are stroing values for keys D,A,C,B. It will give you the iterator with values A,B,C,D. IN performance wise this is wrost compare to hashmap or linkedHashMap. So this has to be use with caution. This is only worth using wher we have very small amount of data and natural ordering is a key requirement in your project. 
 
 
 
